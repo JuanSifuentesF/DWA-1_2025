@@ -1,11 +1,15 @@
 package pe.edu.cibertec.sesion01;
 
+import org.hibernate.annotations.processing.Find;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.MessageSource;
 import pe.edu.cibertec.sesion01.entity.Customer;
+import pe.edu.cibertec.sesion01.entity.Film;
 import pe.edu.cibertec.sesion01.repository.CustomerRepository;
+import pe.edu.cibertec.sesion01.repository.FilmRepository;
 
 import javax.swing.text.html.Option;
 import java.time.LocalDate;
@@ -21,6 +25,9 @@ public class Sesion01Application implements CommandLineRunner {
   //Inyeccion de dependencias
   @Autowired
   CustomerRepository customerRepository;
+
+  @Autowired //<-- Un autowired nos permite usar los métodos de la implementación
+  FilmRepository filmRepository;
 
   public static void main(String[] args) {
     SpringApplication.run(Sesion01Application.class, args);
@@ -170,10 +177,11 @@ public class Sesion01Application implements CommandLineRunner {
     * deleteAllById, para eliminar varios ids
     * */
 
-    List<Integer> ids = List.of(600,601,602,603);
+    // List<Integer> ids = List.of(600,601,602,603);
 
     /* Nos va a servir para reemplazar o sobreescribir de acuerdo a la condicion del filter*/
     // Manera tradicional
+    /*
     ids.stream().filter(id -> customerRepository.existsById(id)).collect(Collectors.toList());
 
     if(!ids.isEmpty()) {
@@ -181,6 +189,7 @@ public class Sesion01Application implements CommandLineRunner {
     } else {
       System.out.println("No se puede eliminar el cliente");
     }
+    */
 
     /*Concepto general para eliminar
     // Manera de validar de forma funcional, si existen, filtrar.
@@ -195,6 +204,68 @@ public class Sesion01Application implements CommandLineRunner {
       System.out.println(id);
     });*/
 
+    /*
+    * findAll - Caching
+    * */
 
+    // Primera Llamada
+    System.out.println("-------------------------------------");
+    System.out.println("-------Caching - 1era Llamada--------");
+    System.out.println("-------------------------------------");
+    Iterable<Film> iterable = filmRepository.findAll();
+    iterable.forEach((film) -> {
+      String message = String.format("%s:%s; ",film.getFilmId(), film.getTitle());
+      System.out.print(message);
+    });
+
+    // Segunda Llamada
+    System.out.println("\n");
+    System.out.println("-------------------------------------");
+    System.out.println("--------Caching - 2da Llamada--------");
+    System.out.println("-------------------------------------");
+    Iterable<Film> iterable2 = filmRepository.findAll();
+    iterable2.forEach((film) -> {
+      String message = String.format("%s:%s; ",film.getFilmId(), film.getTitle());
+      System.out.print(message);
+    });
+
+    //Tercera Llamada
+    System.out.println("\n");
+    System.out.println("-------------------------------------");
+    System.out.println("--------Caching - 3ra Llamada--------");
+    System.out.println("-------------------------------------");
+    Optional<Film> optional = filmRepository.findById(1);
+    optional.ifPresentOrElse(
+          (film) -> {
+            film.setTitle("Mushoku Tensei");
+            filmRepository.save(film);
+            System.out.println("Film updated");
+          },
+          () -> {
+            System.out.println("Film not found");
+          }
+    );
+
+    // Cuarta Llamada
+    System.out.println("\n");
+    System.out.println("-------------------------------------");
+    System.out.println("--------Caching - 4ta Llamada--------");
+    System.out.println("-------------------------------------");
+    Iterable<Film> iterable3 = filmRepository.findAll();
+    iterable3.forEach((film) -> {
+      String message = String.format("%s:%s; ",film.getFilmId(), film.getTitle());
+      System.out.print(message);
+    });
+
+    // Cuarta Llamada
+    System.out.println("\n");
+    System.out.println("-------------------------------------");
+    System.out.println("--------Caching - 5ta Llamada--------");
+    System.out.println("-------------------------------------");
+    Iterable<Film> iterable4 = filmRepository.findAll();
+    iterable4.forEach((film) -> {
+      String message = String.format("%s:%s; ",film.getFilmId(), film.getTitle());
+      System.out.print(message);
+    });
   }
 }
